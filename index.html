@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sí X Juárez — Monitor de Brigadas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --surface2: #F5F5F2;
+    --border: #E8E6E1;
+    --border-light: #F0EEE9;
+    --text: #1A1A1A;
+    --text-dim: #8C8C84;
+    --text-mid: #5A5A54;
+    --verde: #006847;
+    --verde-light: rgba(0, 104, 71, 0.08);
+    --verde-mid: rgba(0, 104, 71, 0.15);
+    --rojo: #CE1126;
+    --rojo-light: rgba(206, 17, 38, 0.08);
+    --rojo-mid: rgba(206, 17, 38, 0.15);
+    --negro: #1A1A1A;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    --shadow-hover: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.05);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+
+  /* ── Header ── */
+  .header {
+    padding: 36px 0 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .logo-mark {
+    flex-shrink: 0;
+  }
+
+  .header-text h1 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .header-text p {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  .header-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .stat-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 8px 18px;
+    font-size: 13px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-chip .num {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+  }
+
+  .stat-chip.verde .num { color: var(--verde); }
+  .stat-chip.rojo .num { color: var(--rojo); }
+
+  /* ── District Tabs ── */
+  .district-nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+
+  .district-tab {
+    font-family: 'DM Sans', sans-serif;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .district-tab:hover {
+    color: var(--text);
+    background: var(--surface);
+  }
+
+  .district-tab.active {
+    background: var(--surface);
+    color: var(--verde);
+    border-color: var(--border);
+    font-weight: 700;
+    box-shadow: 0 -2px 0 var(--verde) inset;
+  }
+
+  .district-tab .tab-count {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    margin-left: 5px;
+    opacity: 0.5;
+    font-weight: 600;
+  }
+
+  .district-tab.active .tab-count { opacity: 0.7; color: var(--text-dim); }
+
+  /* ── Main Panel ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0 var(--radius) var(--radius) var(--radius);
+    padding: 36px;
+    box-shadow: var(--shadow);
+    margin-bottom: 32px;
+  }
+
+  /* ── Section Label ── */
+  .section-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+
+  /* ── Brigadista Cards ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    margin-bottom: 44px;
+  }
+
+  .brig-card {
+    background: var(--surface2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.25s ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .brig-card::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--verde);
+    transform: scaleY(0);
+    transition: transform 0.25s ease;
+  }
+
+  .brig-card:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border);
+    transform: translateY(-1px);
+  }
+
+  .brig-card:hover::after { transform: scaleY(1); }
+
+  .brig-info { flex: 1; min-width: 0; }
+
+  .brig-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .brig-pct {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brig-pct-bar {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    max-width: 80px;
+  }
+
+  .brig-pct-fill {
+    height: 100%;
+    background: var(--verde);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .brig-count {
+    font-family: 'Outfit', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--verde);
+    margin-left: 14px;
+    flex-shrink: 0;
+  }
+
+  /* ── Chart ── */
+  .chart-wrapper {
+    background: var(--surface2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 28px 24px 20px;
+    margin-bottom: 44px;
+  }
+
+  .chart-area {
+    height: 230px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    position: relative;
+    padding-top: 30px;
+  }
+
+  /* Horizontal guide lines */
+  .chart-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 49px,
+      var(--border-light) 49px,
+      var(--border-light) 50px
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .chart-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .chart-bar {
+    width: 100%;
+    max-width: 44px;
+    border-radius: 6px 6px 2px 2px;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    min-height: 3px;
+    cursor: pointer;
+    background: var(--verde);
+  }
+
+  .chart-bar:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 4px 16px rgba(0, 104, 71, 0.25);
+  }
+
+  .chart-val {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .chart-day {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  /* ── Tooltip ── */
+  .tip {
+    display: none;
+    position: fixed;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    font-size: 13px;
+    z-index: 1000;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.12);
+    max-width: 260px;
+    pointer-events: none;
+  }
+
+  .tip.show { display: block; }
+
+  .tip-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: var(--verde);
+    letter-spacing: -0.2px;
+  }
+
+  .tip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 3px 0;
+    font-size: 12.5px;
+  }
+
+  .tip-row .n { color: var(--text-dim); }
+  .tip-row .v { font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--text); }
+  
+  .tip-total {
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+    padding-top: 8px;
+  }
+
+  .tip-total .v { color: var(--verde); }
+
+  /* ── Ranking Table ── */
+  .rank-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .rank-table th {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 2px solid var(--border);
+    font-weight: 600;
+  }
+
+  .rank-table th:last-child { text-align: right; }
+  .rank-table th:nth-child(3) { text-align: right; }
+
+  .rank-table td {
+    padding: 14px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 14px;
+  }
+
+  .rank-table tr:last-child td { border-bottom: none; }
+  .rank-table tbody tr:hover td { background: var(--surface2); }
+
+  .r-num {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    color: var(--text-dim);
+    font-size: 13px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .r-1 .r-num { background: var(--verde-light); color: var(--verde); }
+  .r-2 .r-num { background: var(--rojo-light); color: var(--rojo); }
+  .r-3 .r-num { background: rgba(0,0,0,0.05); color: var(--text); }
+
+  .r-name { font-weight: 600; }
+
+  .r-pct {
+    text-align: right;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .r-count {
+    text-align: right;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--verde);
+  }
+
+  .r-bar-cell { width: 28%; }
+
+  .r-bar-bg {
+    height: 5px;
+    background: var(--surface2);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .r-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--verde), #2D9D6F);
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 8px 0 36px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .app { padding: 0 16px; }
+    .header { padding: 20px 0 16px; }
+    .header-left { gap: 14px; }
+    .header-text h1 { font-size: 18px; }
+    .header-right { width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+    .district-nav { overflow-x: auto; flex-wrap: nowrap; }
+    .panel { padding: 20px; }
+    .card-grid { grid-template-columns: 1fr; }
+    .chart-area { height: 150px; gap: 4px; }
+    .logo-mark svg { width: 42px; height: 42px; }
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .anim { animation: fadeUp 0.35s ease forwards; opacity: 0; }
+  .brig-card:nth-child(1){animation-delay:.03s}
+  .brig-card:nth-child(2){animation-delay:.06s}
+  .brig-card:nth-child(3){animation-delay:.09s}
+  .brig-card:nth-child(4){animation-delay:.12s}
+  .brig-card:nth-child(5){animation-delay:.15s}
+  .brig-card:nth-child(6){animation-delay:.18s}
+  .brig-card:nth-child(7){animation-delay:.21s}
+  .brig-card:nth-child(8){animation-delay:.24s}
+  .brig-card:nth-child(9){animation-delay:.27s}
+  .brig-card:nth-child(10){animation-delay:.30s}
+  .brig-card:nth-child(11){animation-delay:.33s}
+  .brig-card:nth-child(12){animation-delay:.36s}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo-mark">
+        <!-- Recreated Sí X Juárez logo as clean SVG -->
+        <svg width="54" height="54" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="120" height="120" rx="16" fill="#FAFAF8"/>
+          <!-- X shape with tricolor -->
+          <path d="M60 28 L38 92" stroke="#006847" stroke-width="14" stroke-linecap="round"/>
+          <path d="M60 28 L82 92" stroke="#CE1126" stroke-width="14" stroke-linecap="round"/>
+          <path d="M34 46 L86 74" stroke="#006847" stroke-width="10" stroke-linecap="round" opacity="0.5"/>
+          <path d="M86 46 L34 74" stroke="#CE1126" stroke-width="10" stroke-linecap="round" opacity="0.5"/>
+          <!-- Center circle -->
+          <circle cx="60" cy="58" r="7" fill="#FAFAF8" stroke="#1A1A1A" stroke-width="3"/>
+          <!-- Sí text -->
+          <text x="16" y="74" font-family="Outfit, sans-serif" font-weight="800" font-size="28" fill="#1A1A1A">Sí</text>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>Monitor de Brigadas</h1>
+        <p>Sí X Juárez — Encuestas por Distrito</p>
+      </div>
+    </div>
+    <div class="header-right" id="headerStats"></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="district-nav" id="districtNav"></div>
+
+  <!-- Content -->
+  <div class="panel" id="mainPanel"></div>
+
+  <!-- Footer -->
+  <div class="footer" id="footer"></div>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+// ============================================================
+//  DATA — Add new districts here as CSVs arrive
+// ============================================================
+const DATA = {
+  "Distrito 2": {
+    brigadistas: {"Oscar Lider Kioso":166,"Brigadista 9":30,"Brigadista 4":1,"Brigadista 1":1,"Brigadista 2":1,"Brigadista 3":1,"Brigadista 7":1},
+    dailyTotal: {"2026-01-29":5,"2026-01-30":1,"2026-02-03":2,"2026-02-05":45,"2026-02-06":16,"2026-02-09":8,"2026-02-10":28,"2026-02-11":43,"2026-02-12":43,"2026-02-13":10},
+    dailyByPerson: {"2026-01-29":{"Brigadista 4":1,"Brigadista 9":1,"Brigadista 2":1,"Brigadista 3":1,"Brigadista 7":1},"2026-01-30":{"Brigadista 1":1},"2026-02-03":{"Brigadista 9":1,"Oscar Lider Kioso":1},"2026-02-05":{"Brigadista 9":26,"Oscar Lider Kioso":19},"2026-02-06":{"Oscar Lider Kioso":16},"2026-02-09":{"Oscar Lider Kioso":7,"Brigadista 9":1},"2026-02-10":{"Oscar Lider Kioso":28},"2026-02-11":{"Oscar Lider Kioso":43},"2026-02-12":{"Brigadista 9":1,"Oscar Lider Kioso":42},"2026-02-13":{"Oscar Lider Kioso":10}}
+  },
+  "Distrito 3": {
+    brigadistas: {"Angeles Navarrete Ruvalcaba":67,"Kimberly Shadani Méndez Silva":61,"Vianey Duran Alvarado":54,"Paloma Navarrete":45,"Daniela Navarrete Ruvalcaba":35,"Ricardo regalado":19,"Mariana Navarrete":17,"Bernardo Navarrete Domínguez":7,"Salomón Cervantes Rosales":7,"Angelica Montoya":3,"Eduardo Antonio Rivas Gardea":3,"Armando Cervantes":1},
+    dailyTotal: {"2026-02-03":2,"2026-02-04":8,"2026-02-05":14,"2026-02-06":1,"2026-02-07":19,"2026-02-08":37,"2026-02-09":30,"2026-02-10":68,"2026-02-11":45,"2026-02-12":90,"2026-02-13":5},
+    dailyByPerson: {"2026-02-03":{"Bernardo Navarrete Domínguez":2},"2026-02-04":{"Angeles Navarrete Ruvalcaba":1,"Vianey Duran Alvarado":4,"Angelica Montoya":3},"2026-02-05":{"Angeles Navarrete Ruvalcaba":11,"Eduardo Antonio Rivas Gardea":1,"Bernardo Navarrete Domínguez":2},"2026-02-06":{"Bernardo Navarrete Domínguez":1},"2026-02-07":{"Eduardo Antonio Rivas Gardea":2,"Angeles Navarrete Ruvalcaba":13,"Mariana Navarrete":2,"Paloma Navarrete":1,"Armando Cervantes":1},"2026-02-08":{"Bernardo Navarrete Domínguez":2,"Daniela Navarrete Ruvalcaba":35},"2026-02-09":{"Vianey Duran Alvarado":30},"2026-02-10":{"Angeles Navarrete Ruvalcaba":22,"Paloma Navarrete":20,"Vianey Duran Alvarado":20,"Kimberly Shadani Méndez Silva":6},"2026-02-11":{"Kimberly Shadani Méndez Silva":34,"Paloma Navarrete":10,"Mariana Navarrete":1},"2026-02-12":{"Kimberly Shadani Méndez Silva":16,"Mariana Navarrete":14,"Salomón Cervantes Rosales":7,"Angeles Navarrete Ruvalcaba":20,"Ricardo regalado":19,"Paloma Navarrete":14},"2026-02-13":{"Kimberly Shadani Méndez Silva":5}}
+  },
+  "Distrito 4": {
+    brigadistas: {"Karla Verónica Chavira Lucero":32,"Denia Vazquez":22,"Jorge Avila":21,"Lluvia Jacqueline Hernández Chavira":20,"María de Lourdes Chavira Lucero":18,"Jahir Barrios":16,"Omar Federico Carpio Salazar":14,"Rosa Isabel Lara Amec":14,"Yerasli Berenice Rodríguez":12,"Teresa García Cardenas":9,"Laura Berenice Rojas Avila":4,"Alan Roberto Vázquez Pérez":3,"Vanesa Mendez Kiosko":1,"Angel Roberto Hernández Chavira":1,"Ruben Morales":1},
+    dailyTotal: {"2026-01-29":1,"2026-02-10":39,"2026-02-11":77,"2026-02-12":66,"2026-02-13":5},
+    dailyByPerson: {"2026-01-29":{"Vanesa Mendez Kiosko":1},"2026-02-10":{"Lluvia Jacqueline Hernández Chavira":14,"Teresa García Cardenas":1,"Alan Roberto Vázquez Pérez":2,"Omar Federico Carpio Salazar":1,"Angel Roberto Hernández Chavira":1,"María de Lourdes Chavira Lucero":4,"Rosa Isabel Lara Amec":8,"Karla Verónica Chavira Lucero":8},"2026-02-11":{"Omar Federico Carpio Salazar":7,"María de Lourdes Chavira Lucero":6,"Karla Verónica Chavira Lucero":11,"Yerasli Berenice Rodríguez":5,"Alan Roberto Vázquez Pérez":1,"Laura Berenice Rojas Avila":1,"Ruben Morales":1,"Teresa García Cardenas":5,"Jahir Barrios":13,"Lluvia Jacqueline Hernández Chavira":4,"Rosa Isabel Lara Amec":4,"Jorge Avila":13,"Denia Vazquez":6},"2026-02-12":{"Jahir Barrios":3,"Denia Vazquez":16,"Laura Berenice Rojas Avila":3,"Lluvia Jacqueline Hernández Chavira":2,"Karla Verónica Chavira Lucero":13,"María de Lourdes Chavira Lucero":8,"Omar Federico Carpio Salazar":5,"Teresa García Cardenas":3,"Yerasli Berenice Rodríguez":6,"Rosa Isabel Lara Amec":2,"Jorge Avila":5},"2026-02-13":{"Omar Federico Carpio Salazar":1,"Jorge Avila":3,"Yerasli Berenice Rodríguez":1}}
+  },
+  "Distrito 5": {
+    brigadistas: {"Brigadista 4":5,"Jose Enrique Lara Ameca":5,"Brigadista 1":1},
+    dailyTotal: {"2026-02-10":1,"2026-02-11":8,"2026-02-12":2},
+    dailyByPerson: {"2026-02-10":{"Brigadista 1":1},"2026-02-11":{"Brigadista 4":5,"Jose Enrique Lara Ameca":3},"2026-02-12":{"Jose Enrique Lara Ameca":2}}
+  },
+  "Distrito 6": {
+    brigadistas: {"Reclutador 3":107,"Reclutador 2":89,"Reclutador 4":78,"Reclutador 6":76,"Reclutador 5":64,"Reclutador 8":37,"Reclutador 12":31,"Reclutador 1":27,"Reclutador 7":23},
+    dailyTotal: {"2026-01-28":10,"2026-01-30":2,"2026-02-02":3,"2026-02-03":20,"2026-02-04":18,"2026-02-05":68,"2026-02-06":154,"2026-02-07":20,"2026-02-09":33,"2026-02-10":15,"2026-02-11":16,"2026-02-12":66,"2026-02-13":107},
+    dailyByPerson: {"2026-01-28":{"Reclutador 5":2,"Reclutador 1":1,"Reclutador 7":1,"Reclutador 6":2,"Reclutador 2":1,"Reclutador 12":2,"Reclutador 8":1},"2026-01-30":{"Reclutador 6":2},"2026-02-02":{"Reclutador 6":3},"2026-02-03":{"Reclutador 6":17,"Reclutador 5":3},"2026-02-04":{"Reclutador 3":1,"Reclutador 6":6,"Reclutador 12":9,"Reclutador 8":2},"2026-02-05":{"Reclutador 4":9,"Reclutador 6":21,"Reclutador 3":19,"Reclutador 5":19},"2026-02-06":{"Reclutador 1":17,"Reclutador 6":7,"Reclutador 3":35,"Reclutador 4":16,"Reclutador 5":31,"Reclutador 2":16,"Reclutador 8":32},"2026-02-07":{"Reclutador 12":18,"Reclutador 8":2},"2026-02-09":{"Reclutador 6":18,"Reclutador 2":15},"2026-02-10":{"Reclutador 2":15},"2026-02-11":{"Reclutador 5":1,"Reclutador 2":15},"2026-02-12":{"Reclutador 5":8,"Reclutador 2":27,"Reclutador 4":13,"Reclutador 3":9,"Reclutador 1":9},"2026-02-13":{"Reclutador 4":40,"Reclutador 3":43,"Reclutador 7":22,"Reclutador 12":2}}
+  },
+  "Distrito 7": {
+    brigadistas: {"Ivan Reyes Roque":95,"Ale Belmontes Lider":89,"Emily Reyes Belmontes":44,"Brigadista 4":1,"Brigadista 2":1},
+    dailyTotal: {"2026-01-29":4,"2026-01-31":5,"2026-02-04":8,"2026-02-05":9,"2026-02-06":115,"2026-02-07":7,"2026-02-08":12,"2026-02-11":23,"2026-02-13":47},
+    dailyByPerson: {"2026-01-29":{"Ale Belmontes Lider":2,"Brigadista 4":1,"Brigadista 2":1},"2026-01-31":{"Emily Reyes Belmontes":5},"2026-02-04":{"Ale Belmontes Lider":8},"2026-02-05":{"Ale Belmontes Lider":9},"2026-02-06":{"Ale Belmontes Lider":9,"Ivan Reyes Roque":68,"Emily Reyes Belmontes":38},"2026-02-07":{"Emily Reyes Belmontes":1,"Ivan Reyes Roque":4,"Ale Belmontes Lider":2},"2026-02-08":{"Ale Belmontes Lider":12},"2026-02-11":{"Ale Belmontes Lider":23},"2026-02-13":{"Ivan Reyes Roque":23,"Ale Belmontes Lider":24}}
+  },
+  "Distrito 8": {
+    brigadistas: {"Santiago Rodriguez":84,"Ismael Rodriguez":63,"Brenda Pacheco":60,"Luis Vicente Chairez":30,"Fidel Reyes":21},
+    dailyTotal: {"2026-01-30":27,"2026-01-31":5,"2026-02-01":14,"2026-02-02":38,"2026-02-03":87,"2026-02-04":21,"2026-02-05":19,"2026-02-09":3,"2026-02-12":18,"2026-02-13":26},
+    dailyByPerson: {"2026-01-30":{"Fidel Reyes":6,"Brenda Pacheco":6,"Ismael Rodriguez":1,"Santiago Rodriguez":14},"2026-01-31":{"Santiago Rodriguez":5},"2026-02-01":{"Santiago Rodriguez":14},"2026-02-02":{"Ismael Rodriguez":8,"Luis Vicente Chairez":30},"2026-02-03":{"Brenda Pacheco":6,"Ismael Rodriguez":34,"Santiago Rodriguez":47},"2026-02-04":{"Santiago Rodriguez":1,"Ismael Rodriguez":20},"2026-02-05":{"Brenda Pacheco":19},"2026-02-09":{"Santiago Rodriguez":3},"2026-02-12":{"Brenda Pacheco":18},"2026-02-13":{"Brenda Pacheco":11,"Fidel Reyes":15}}
+  },
+  "Distrito 9": {
+    brigadistas: {"Abraham Pérez Gutiérrez":131,"Francisco Garcia":68,"Martha Garcia":47,"Antonio López Tovar":46,"Abril Rnov":37,"Orlando Rodríguez Rodríguez":19,"Cecy Gutierrez":17,"Jaire":16,"Jesus Esparza Garcia":11,"Obdulia Carrasco":6,"Rocío García":2,"César Antonio Guereque Estrada":1},
+    dailyTotal: {"2026-02-03":2,"2026-02-04":40,"2026-02-05":43,"2026-02-06":81,"2026-02-07":3,"2026-02-09":18,"2026-02-10":17,"2026-02-11":31,"2026-02-12":163,"2026-02-13":3},
+    dailyByPerson: {"2026-02-03":{"Francisco Garcia":1,"César Antonio Guereque Estrada":1},"2026-02-04":{"Abraham Pérez Gutiérrez":5,"Antonio López Tovar":20,"Rocío García":2,"Martha Garcia":13},"2026-02-05":{"Martha Garcia":26,"Antonio López Tovar":16,"Francisco Garcia":1},"2026-02-06":{"Jesus Esparza Garcia":11,"Abraham Pérez Gutiérrez":63,"Martha Garcia":1,"Orlando Rodríguez Rodríguez":6},"2026-02-07":{"Abraham Pérez Gutiérrez":3},"2026-02-09":{"Abraham Pérez Gutiérrez":18},"2026-02-10":{"Antonio López Tovar":10,"Martha Garcia":7},"2026-02-11":{"Jaire":2,"Cecy Gutierrez":1,"Abril Rnov":5,"Obdulia Carrasco":3,"Abraham Pérez Gutiérrez":20},"2026-02-12":{"Cecy Gutierrez":16,"Jaire":14,"Abril Rnov":29,"Francisco Garcia":66,"Obdulia Carrasco":3,"Abraham Pérez Gutiérrez":22,"Orlando Rodríguez Rodríguez":13},"2026-02-13":{"Abril Rnov":3}}
+  },
+  "Distrito 10": {
+    brigadistas: {"Blanca Olguin":120,"Rafaella Antonio":112,"Juana Maria Mezta":105,"Roger Antonio":98,"Lourdes Cervantes":61,"Yolanda Jimenez Avendano":19,"Odalia Carlos Web":11},
+    dailyTotal: {"2026-01-29":6,"2026-01-30":20,"2026-01-31":7,"2026-02-01":4,"2026-02-02":16,"2026-02-03":136,"2026-02-04":104,"2026-02-05":68,"2026-02-06":2,"2026-02-09":20,"2026-02-10":59,"2026-02-11":41,"2026-02-12":43},
+    dailyByPerson: {"2026-01-29":{"Yolanda Jimenez Avendano":1,"Odalia Carlos Web":1,"Lourdes Cervantes":1,"Blanca Olguin":1,"Rafaella Antonio":2},"2026-01-30":{"Blanca Olguin":6,"Yolanda Jimenez Avendano":3,"Odalia Carlos Web":3,"Rafaella Antonio":8},"2026-01-31":{"Odalia Carlos Web":7},"2026-02-01":{"Juana Maria Mezta":3,"Yolanda Jimenez Avendano":1},"2026-02-02":{"Yolanda Jimenez Avendano":14,"Blanca Olguin":1,"Rafaella Antonio":1},"2026-02-03":{"Rafaella Antonio":8,"Roger Antonio":12,"Lourdes Cervantes":36,"Blanca Olguin":50,"Juana Maria Mezta":30},"2026-02-04":{"Blanca Olguin":62,"Roger Antonio":4,"Rafaella Antonio":38},"2026-02-05":{"Roger Antonio":45,"Juana Maria Mezta":23},"2026-02-06":{"Juana Maria Mezta":2},"2026-02-09":{"Rafaella Antonio":11,"Juana Maria Mezta":9},"2026-02-10":{"Roger Antonio":20,"Lourdes Cervantes":24,"Juana Maria Mezta":15},"2026-02-11":{"Roger Antonio":17,"Rafaella Antonio":24},"2026-02-12":{"Rafaella Antonio":20,"Juana Maria Mezta":23}}
+  }
+};
+
+let active = Object.keys(DATA)[0];
+
+// Helpers
+function fmtDate(s) {
+  const d = new Date(s+'T12:00:00');
+  return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][d.getDay()] + ' ' + d.getDate();
+}
+
+function fmtDateFull(s) {
+  const d = new Date(s+'T12:00:00');
+  const m = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return d.getDate() + ' ' + m[d.getMonth()];
+}
+
+function totals() {
+  let t = 0, b = 0, dist = Object.keys(DATA).length;
+  for (const d of Object.values(DATA)) {
+    t += Object.values(d.brigadistas).reduce((a,c)=>a+c,0);
+    b += Object.keys(d.brigadistas).length;
+  }
+  return {t, b, dist};
+}
+
+// Render
+function renderHeader() {
+  const s = totals();
+  document.getElementById('headerStats').innerHTML = `
+    <div class="stat-chip verde"><span class="num">${s.t.toLocaleString()}</span> respuestas</div>
+    <div class="stat-chip"><span class="num">${s.b}</span> brigadistas</div>
+    <div class="stat-chip rojo"><span class="num">${s.dist}</span> ${s.dist===1?'distrito':'distritos'}</div>`;
+}
+
+function renderNav() {
+  document.getElementById('districtNav').innerHTML = Object.entries(DATA).map(([n,d]) => {
+    const t = Object.values(d.brigadistas).reduce((a,c)=>a+c,0);
+    return `<button class="district-tab ${n===active?'active':''}" onclick="go('${n}')">${n}<span class="tab-count">${t}</span></button>`;
+  }).join('');
+}
+
+function renderPanel() {
+  const d = DATA[active]; if(!d) return;
+  const total = Object.values(d.brigadistas).reduce((a,c)=>a+c,0);
+  const max = Math.max(...Object.values(d.brigadistas));
+  const sorted = Object.entries(d.brigadistas).sort((a,b)=>b[1]-a[1]);
+  const days = Object.keys(d.dailyTotal).sort();
+  const maxD = Math.max(...Object.values(d.dailyTotal));
+
+  let h = '';
+
+  // Cards
+  h += `<div class="section-label">Respuestas por Brigadista</div><div class="card-grid">`;
+  sorted.forEach(([name,count]) => {
+    const pct = ((count/total)*100).toFixed(1);
+    const barW = ((count/max)*100).toFixed(0);
+    h += `<div class="brig-card anim">
+      <div class="brig-info">
+        <div class="brig-name" title="${name}">${name}</div>
+        <div class="brig-pct">
+          <span>${pct}%</span>
+          <div class="brig-pct-bar"><div class="brig-pct-fill" style="width:${barW}%"></div></div>
+        </div>
+      </div>
+      <div class="brig-count">${count}</div>
+    </div>`;
+  });
+  h += `</div>`;
+
+  // Chart
+  h += `<div class="section-label">Tendencia Diaria</div><div class="chart-wrapper"><div class="chart-area">`;
+  days.forEach(day => {
+    const val = d.dailyTotal[day];
+    const ht = Math.max(((val/maxD)*160),3);
+    const det = encodeURIComponent(JSON.stringify(d.dailyByPerson[day]||{}));
+    h += `<div class="chart-col">
+      <div class="chart-bar" style="height:${ht}px" data-day="${day}" data-d="${det}"
+           onmouseenter="showTip(event,this)" onmouseleave="hideTip()">
+        <span class="chart-val">${val}</span>
+      </div>
+      <span class="chart-day">${fmtDate(day)}</span>
+    </div>`;
+  });
+  h += `</div></div>`;
+
+  // Table
+  h += `<div class="section-label">Ranking</div><table class="rank-table">
+    <thead><tr><th style="width:44px">#</th><th>Brigadista</th><th>%</th><th class="r-bar-cell"></th><th>Total</th></tr></thead><tbody>`;
+  sorted.forEach(([name,count],i) => {
+    const pct = ((count/total)*100).toFixed(1);
+    const barW = ((count/max)*100).toFixed(0);
+    const rc = i<3?`r-${i+1}`:'';
+    h += `<tr class="${rc}">
+      <td><span class="r-num">${i+1}</span></td>
+      <td class="r-name">${name}</td>
+      <td class="r-pct">${pct}%</td>
+      <td class="r-bar-cell"><div class="r-bar-bg"><div class="r-bar-fill" style="width:${barW}%"></div></div></td>
+      <td class="r-count">${count}</td>
+    </tr>`;
+  });
+  h += `</tbody></table>`;
+
+  document.getElementById('mainPanel').innerHTML = h;
+  document.getElementById('footer').textContent = 'Actualizado: ' + new Date().toLocaleDateString('es-MX',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+// Tooltip
+function showTip(e, el) {
+  const tip = document.getElementById('tip');
+  const day = el.dataset.day;
+  const det = JSON.parse(decodeURIComponent(el.dataset.d));
+  const s = Object.entries(det).sort((a,b)=>b[1]-a[1]);
+  const tot = s.reduce((a,[,v])=>a+v,0);
+
+  let html = `<div class="tip-title">${fmtDateFull(day)}</div>`;
+  s.forEach(([n,c]) => { html += `<div class="tip-row"><span class="n">${n}</span><span class="v">${c}</span></div>`; });
+  html += `<div class="tip-row tip-total"><span class="n">Total</span><span class="v">${tot}</span></div>`;
+
+  tip.innerHTML = html;
+  tip.classList.add('show');
+  const r = el.getBoundingClientRect();
+  let left = r.left + r.width/2 - 130;
+  let top = r.top - tip.offsetHeight - 10;
+  if(top<8) top = r.bottom + 10;
+  if(left<8) left = 8;
+  tip.style.left = left+'px';
+  tip.style.top = top+'px';
+}
+
+function hideTip() { document.getElementById('tip').classList.remove('show'); }
+
+function go(name) { active = name; renderNav(); renderPanel(); }
+
+// Init
+renderHeader();
+renderNav();
+renderPanel();
+</script>
+</body>
+</html>
